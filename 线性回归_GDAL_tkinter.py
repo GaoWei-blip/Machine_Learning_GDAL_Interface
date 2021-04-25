@@ -8,6 +8,8 @@ Created on Thu Apr 22 19:56:13 2021
 from tkinter import *
 from tkinter.tix import Tk,Control,ComboBox #升级的组合控件包
 from tkinter.messagebox import showinfo,showwarning,showerror #各种类型的提示框
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 
 root = Tk() #初始化Tk()
@@ -24,9 +26,11 @@ label = Label(root,text = "实现遥感地表参数的线性回归",
               bg = "pink",bd = 10,font = ("Arial",12),width = 28,height = 1)
 label.pack(side=TOP)
 
+
 #------------------------------------------------------------------------------
 #线性回归+GDAL 相关函数
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 font = FontProperties(fname = r"c:\windows\fonts\simsun.ttc",size=14)
@@ -53,31 +57,35 @@ def GradientDescent(X,y,theta,alpha):
     return J_history,theta
 
 def dataNormalize(X):
+    global X_norm,canvas_spice
     Xmin = np.min(X,axis=1).reshape(-1,1)
     Xmax = np.max(X,axis=1).reshape(-1,1)
     X_norm = (X-Xmin)/(Xmax-Xmin)
     
+    var.set('已归一化')
+    label_Img.config(image='') 
+    
+    #图像及画布
+    fig = plt.figure(figsize=(4.5,4),dpi=100)#图像比例
+    f_plot =fig.add_subplot(111)#划分区域
+    canvas_spice = FigureCanvasTkAgg(fig,root)
+    canvas_spice.get_tk_widget().place(x=300,y=100)#放置位置
+    
     X1=X_norm[:,1]
     X2=X_norm[:,2]
-    plt.scatter(X1,X2)
+    #plt.scatter(X1,X2)
     plt.title(u"归一化后两类特征结果图",fontproperties=font)
-    plt.xlabel(u"X1",fontproperties=font)
-    plt.ylabel(u"X2",fontproperties=font)
-    plt.show()
-    
-    return X_norm
+    plt.xlabel(u"X1",fontproperties=font,labelpad=2.5)
+    plt.ylabel(u"X2",fontproperties=font,labelpad=0.5)
+    plt.scatter(X1,X2)
+    #plt.show()    
+    plt.grid(True)#网格  
+    canvas_spice.draw()
 
-def plot_X1_X2(X_norm):
     
-    X1=X_norm[:,1]
-    X2=X_norm[:,2]
-    plt.scatter(X1,X2)
-    plt.title(u"归一化后两类特征结果图",fontproperties=font)
-    plt.xlabel(u"X1",fontproperties=font)
-    plt.ylabel(u"X2",fontproperties=font)
-    plt.show()
     
 def openData():
+    global image_array
     image = gdal.Open(r"hiwater_xiayou_2014.tif")
     nCols = image.RasterXSize
     nRows = image.RasterYSize
@@ -103,11 +111,19 @@ def openData():
 
 
     var.set('已显示')
-    global img_png
+    global img_png,label_Img
     resized = Image.fromarray(resized)
     img_png = ImageTk.PhotoImage(resized)
     label_Img = Label(root, image=img_png)
     label_Img.place(x=450,y=100)
+    
+    global X_train,y_train
+    data = pd.read_csv('hiwater_xiayou_practice.txt')
+    data = np.array(data)
+    X_train = data[:,2:8]
+    y_train = data[:,9]
+    
+
 #------------------------------------------------------------------------------
 #BUTTON
 button1=Button(root,text='QUIT',command=root.destroy,activeforeground="black",
@@ -119,7 +135,7 @@ button2=Button(root,text='打开并显示原始影像',command=openData,
                bg='Turquoise',fg='white')
 button2.place(x=100,y=100)
 
-button3=Button(root,text='数据归一化并绘图',command=root.destroy,
+button3=Button(root,text='训练集归一化并绘图',command=lambda:dataNormalize(X_train),
                activeforeground="black",activebackground='blue',
                bg='Turquoise',fg='white')
 button3.place(x=100,y=150)
