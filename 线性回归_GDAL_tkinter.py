@@ -46,21 +46,29 @@ def computerCost(X,y,theta):
     J= np.dot(np.transpose(np.dot(X,theta)-y),np.dot(X,theta)-y)/(2*m)
     return J
 
-def GradientDescent(X,y,theta,alpha):
+def GradientDescent(X,y,theta,alpha,num_iters):
+    global J_history
     m=len(y)
-    theta = np.zeros((X.shape[1],1))
-    for i in range(X.shape[0]):
-        theta = temp[i,:]
-        temp[i,:] = theta - (alpha/m)*np.dot(np.transpose(X),np.dot(X,theta)-y)
+    n=len(theta)
+    
+    temp = np.matrix(np.zeros((n,num_iters)))
+    J_history = np.zeros((num_iters,1))
+    
+    for i in range(num_iters):
+        temp[:,i] = theta - (alpha/m)*np.dot(np.transpose(X),np.dot(X,theta)-y)
+        theta = temp[:,i]
         J_history[i] = computerCost(X,y,theta)
     
     return J_history,theta
 
 def dataNormalize(X):
-    global X_norm,canvas_spice
     Xmin = np.min(X,axis=1).reshape(-1,1)
     Xmax = np.max(X,axis=1).reshape(-1,1)
     X_norm = (X-Xmin)/(Xmax-Xmin)
+    return X_norm
+
+def plot_X1_X2(X):   
+    X_norm=dataNormalize(X)
     
     var.set('已归一化')
     label_Img.config(image='') 
@@ -81,9 +89,7 @@ def dataNormalize(X):
     #plt.show()    
     plt.grid(True)#网格  
     canvas_spice.draw()
-
-    
-    
+           
 def openData():
     global image_array
     image = gdal.Open(r"hiwater_xiayou_2014.tif")
@@ -121,9 +127,70 @@ def openData():
     data = pd.read_csv('hiwater_xiayou_practice.txt')
     data = np.array(data)
     X_train = data[:,2:8]
-    y_train = data[:,9]
+    y_train = data[:,9].reshape(-1,1)
     
+def LinearRegression(X,y,alpha,num_iters):
+    var.set('已线性回归')
+    global theta
+    X = dataNormalize(X)
+    X = np.hstack((np.ones((X.shape[0],1)),X))
+    
+    theta = np.zeros((X.shape[1],1))
+    
+    J_history,theta = GradientDescent(X, y, theta, alpha,num_iters)
+    
+def plotJ(J_history,num_iters):
+    var.set('已绘图')
+    
+    #图像及画布
+    fig = plt.figure(figsize=(4.5,4),dpi=100)#图像比例
+    f_plot =fig.add_subplot(111)#划分区域
+    canvas_spice = FigureCanvasTkAgg(fig,root)
+    canvas_spice.get_tk_widget().place(x=300,y=100)#放置位置
+    
+    x = np.arange(1,num_iters+1)
+    plt.plot(x,J_history)
+    plt.title(u'代价值随迭代数的变化',fontproperties = font)
+    plt.xlabel(u'迭代数',fontproperties = font)
+    plt.ylabel(u'代价值',fontproperties = font)
+    #plt.show()
+    plt.grid(True)#网格  
+    canvas_spice.draw()
 
+def predict(X,theta):
+    global result_image
+    var.set('已预测')
+    result_image = np.zeros((X.shape[1],X.shape[2]))
+    
+    X1 = X.reshape(X.shape[0],X.shape[1]*X.shape[2])
+    X1 = np.transpose(X1)
+    X1 = dataNormalize(X1)
+    X1 = np.hstack((np.ones((X1.shape[0],1)),X1))
+    result_temp = np.dot(X1,theta)
+    result_image = result_temp.reshape(X.shape[1],X.shape[2])
+    
+    Imax = np.nanmax(result_image)
+    Imin = np.nanmin(result_image)
+    result_image = ((result_image - Imin) * (1/(Imax-Imin)) * 255).astype('uint8')
+
+    #图像及画布
+    fig = plt.figure(figsize=(4.5,4),dpi=100)#图像比例
+    f_plot =fig.add_subplot(111)#划分区域
+    canvas_spice = FigureCanvasTkAgg(fig,root)
+    canvas_spice.get_tk_widget().place(x=300,y=100)#放置位置 
+    
+    #缩放影像
+    scale_percent = 20       # percent of original size
+    width = int(result_image.shape[1] * scale_percent / 100)
+    height = int(result_image.shape[0] * scale_percent / 100)
+    dim = (width, height)      
+    resized = cv2.resize(result_image, dim, interpolation = cv2.INTER_AREA) 
+    plt.imshow(resized)
+    plt.xticks([])
+    plt.yticks([])
+    #plt.show()  
+    canvas_spice.draw()
+          
 #------------------------------------------------------------------------------
 #BUTTON
 button1=Button(root,text='QUIT',command=root.destroy,activeforeground="black",
@@ -135,22 +202,23 @@ button2=Button(root,text='打开并显示原始影像',command=openData,
                bg='Turquoise',fg='white')
 button2.place(x=100,y=100)
 
-button3=Button(root,text='训练集归一化并绘图',command=lambda:dataNormalize(X_train),
+button3=Button(root,text='训练集归一化并绘图',command=lambda:plot_X1_X2(X_train),
                activeforeground="black",activebackground='blue',
                bg='Turquoise',fg='white')
 button3.place(x=100,y=150)
 
-button4=Button(root,text='线性回归',command=root.destroy,
+button4=Button(root,text='线性回归',
+               command=lambda:LinearRegression(X_train,y_train,0.1,500),
                activeforeground="black",activebackground='blue',
                bg='Turquoise',fg='white')
 button4.place(x=100,y=200)
 
-button5=Button(root,text='代价值随迭代数变化',command=root.destroy,
+button5=Button(root,text='代价值随迭代数变化',command=lambda:plotJ(J_history,500),
                activeforeground="black",activebackground='blue',
                bg='Turquoise',fg='white')
 button5.place(x=100,y=250)
 
-button6=Button(root,text='预测并显示结果',command=root.destroy,
+button6=Button(root,text='预测并显示结果',command=lambda:predict(image_array,theta),
                activeforeground="black",activebackground='blue',
                bg='Turquoise',fg='white')
 button6.place(x=100,y=300)
@@ -169,7 +237,7 @@ filemenu=Menu(menubar,tearoff=0)
 filemenu.add_command(label='新建...',command=click)
 filemenu.add_command(label='打开...',command=click)
 filemenu.add_command(label='保存',command=click)
-filemenu.add_command(label='关闭填写',command=root.destroy)
+filemenu.add_command(label='退出',command=root.destroy)
 menubar.add_cascade(label='文件',menu=filemenu)
 root.config(menu = menubar)
 
