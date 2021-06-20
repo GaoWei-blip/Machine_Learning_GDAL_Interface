@@ -92,7 +92,7 @@ def plot_X1_X2(X):
            
 def openData():
     global image_array
-    image = gdal.Open(r"hiwater_xiayou_2014.tif")
+    image = gdal.Open(r"./data/hiwater_xiayou_2014.tif")
     nCols = image.RasterXSize
     nRows = image.RasterYSize
     image_array = image.ReadAsArray(0,0,nCols,nRows)
@@ -124,7 +124,7 @@ def openData():
     label_Img.place(x=450,y=100)
     
     global X_train,y_train
-    data = pd.read_csv('hiwater_xiayou_practice.txt')
+    data = pd.read_csv('.data/hiwater_xiayou_practice.txt')
     data = np.array(data)
     X_train = data[:,2:8]
     y_train = data[:,9].reshape(-1,1)
