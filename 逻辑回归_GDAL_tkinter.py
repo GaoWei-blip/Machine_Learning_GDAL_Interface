@@ -69,7 +69,7 @@ def computerGradient(initial_theta,X,y,initial_lambda):
     gradient = np.dot(np.transpose(X),h-y)/m+initial_lambda/m*theta1    
     return gradient  
     
-#3.特征多项式函数
+#3.特征多项式函数，用于增加特征量,二次多项式可将2维特征扩展至6维
 def mapFeature(X1,X2):
     degree=2
     out = np.ones((X1.shape[0],1))
@@ -80,39 +80,55 @@ def mapFeature(X1,X2):
             out = np.hstack((out,temp.reshape(-1,1)))
     return out
 
-#4.画二维图
+#4.画二维图,这里取的红和红外波段
 def plot_data(X,y):
     pos = np.where(y==1)
     neg = np.where(y==0)
     
-    plt.figure(figsize=(15,12))
-    plt.plot(X[pos,0],X[pos,1],"ro")
-    plt.plot(X[neg,0],X[neg,1],"bo")
+    label_Img.config(image='') 
+    
+    #图像及画布
+    fig = plt.figure(figsize=(4.5,4),dpi=100)#图像比例
+    f_plot =fig.add_subplot(111)#划分区域
+    canvas_spice = FigureCanvasTkAgg(fig,root)
+    canvas_spice.get_tk_widget().place(x=330,y=100)#放置位置
+    
+    #plt.figure(figsize=(15,12))
+    plt.plot(X[pos,2],X[pos,3],"ro",markersize=1)
+    plt.plot(X[neg,2],X[neg,3],"bo",markersize=1)
     plt.title(u"两个类别散点图",fontproperties=font)
-    plt.show()
+    
+    plt.grid(True)#网格  
+    canvas_spice.draw()
+    #plt.show()
     
 #5.画出决策边界
-def plotDecisionBoundary(theta,X,y):
-    pos = np.where(y==1)
-    neg = np.where(y==0)
+def plotDecisionBoundary(result_theta,X_train,y_train):
+    var.set('已画决策边界')
     
-    plt.figure(figsize=(15,12))
-    plt.plot(X[pos,0],X[pos,1],"ro")
-    plt.plot(X[neg,0],X[neg,1],"bo")
+    pos = np.where(y_train==1)
+    neg = np.where(y_train==0)
+    
+    fig = plt.figure(figsize=(4.5,4),dpi=100)#图像比例
+    f_plot =fig.add_subplot(111)#划分区域
+    canvas_spice = FigureCanvasTkAgg(fig,root)
+    canvas_spice.get_tk_widget().place(x=330,y=100)#放置位置
+    
+    #plt.figure(figsize=(15,12))
+    plt.plot(X_train[pos,2],X_train[pos,3],"ro",markersize=1)
+    plt.plot(X_train[neg,2],X_train[neg,3],"bo",markersize=1)
     plt.title(u"决策边界",fontproperties=font)
 
-    u = np.linspace(-1,1.5,50)
-    v = np.linspace(-1,1.5,50)
-    z = np.zeros((len(u),len(v)))
-    for i in range(len(u)):
-        for j in range(len(v)):
-            z[i,j] = np.dot(mapFeature(u[i].reshape(1,-1),v[j].reshape(1,-1)),theta)
+    #线性决策边界
+    plot_x = np.linspace(0,4000,1000)
+    plot_y = (result_theta[2]/result_theta[3]+1) * plot_x
+    plt.plot(plot_x, plot_y, c='orange', label='classify line')
     
-    z = np.transpose(z)
-    plt.contour(u,v,z,[0,0.01],linewidths=2.0)
-    plt.show()
+    plt.grid(True)#网格  
+    canvas_spice.draw()
+    #plt.show()
     
-#6.预测
+#6.训练集预测
 def predict(X,theta):
     m = X.shape[0]
     p = np.zeros((m,1))
@@ -126,19 +142,16 @@ def predict(X,theta):
     return p
 
 #7.逻辑回归主函数
-def logisticRegression():
-    data = np.loadtxt("E:/学习文档/python/机器学习/MachineLearning_Python-master/\
-LogisticRegression/data2.txt",delimiter=",",dtype=np.float64)
-    X=data[:,0:-1]
-    y=data[:,-1]
+def logisticRegression(X_train,y_train):
     
-    plot_data(X,y)
+    var.set('已逻辑回归')
+    plot_data(X_train,y_train)
     
-    X=mapFeature(X[:,0],X[:,1])
-    initial_theta = np.zeros((X.shape[1],1))
+    #X_train=mapFeature(X_train[:,0],X_train[:,1])
+    initial_theta = np.zeros((X_train.shape[1],1))
     initial_lambda = 0.1
     
-    J=computerCost(initial_theta,X,y,initial_lambda)
+    J=computerCost(initial_theta,X_train,y_train,initial_lambda)
     print(J)
     
     # num_iters=500
@@ -148,23 +161,14 @@ LogisticRegression/data2.txt",delimiter=",",dtype=np.float64)
     # print(J_history.min())
     # #print(J_history[499])
     
-    result = optimize.fmin_bfgs(computerCost,initial_theta,fprime=computerGradient,
-                                args=(X,y,initial_lambda))
-        
-    print(result)
-    p = predict(X,result)
-    print(u'在训练集上的准确度为%f%%'%np.mean(np.float64(p==y)*100))
+    global result_theta
+    result_theta = optimize.fmin_bfgs(computerCost,initial_theta,fprime=computerGradient,
+                                args=(X_train,y_train,initial_lambda))
+       
+    print(result_theta)
+    p = predict(X_train,result_theta)
+    print(u'在训练集上的准确度为%f%%'%np.mean(np.float64(p==y_train)*100))
     
-    X=data[:,0:-1]
-    y=data[:,-1]
-    plotDecisionBoundary(result, X, y)
-    
-#测试
-def testLogisticRegression():
-    logisticRegression()
-
-if __name__ == "__main__":
-    testLogisticRegression()
 
 #打开数据
 def openData():
@@ -205,6 +209,50 @@ def openData():
     X_train=data[:,0:-1]
     y_train=data[:,-1]
 
+
+#对影像进行分类
+def predict_image(X,result_theta):
+    var.set('已预测')
+    xShape1=X.shape[1]
+    xShape2=X.shape[2]
+    result_image = np.zeros((X.shape[1],X.shape[2]))
+    
+    X = X.reshape(X.shape[0],X.shape[1]*X.shape[2])
+    X = np.transpose(X)
+    
+    m = X.shape[0]
+    p = np.zeros((m,1))
+    p = sigmoid(np.dot(X,result_theta))
+    
+    for i in range(m):
+        if p[i]>0.5:
+            p[i]=1
+        else:
+            p[i]=0
+            
+    result_image = p.reshape(xShape1,xShape2)
+    Imax = np.nanmax(result_image)
+    Imin = np.nanmin(result_image)
+    result_image = ((result_image - Imin) * (1/(Imax-Imin)) * 255).astype('uint8')
+
+    #图像及画布
+    fig = plt.figure(figsize=(4.5,4),dpi=100)#图像比例
+    f_plot =fig.add_subplot(111)#划分区域
+    canvas_spice = FigureCanvasTkAgg(fig,root)
+    canvas_spice.get_tk_widget().place(x=300,y=100)#放置位置 
+    
+    #缩放影像
+    scale_percent = 20       # percent of original size
+    width = int(result_image.shape[1] * scale_percent / 100)
+    height = int(result_image.shape[0] * scale_percent / 100)
+    dim = (width, height)      
+    resized = cv2.resize(result_image, dim, interpolation = cv2.INTER_AREA) 
+    plt.imshow(resized)
+    plt.xticks([])
+    plt.yticks([])
+    #plt.show()  
+    canvas_spice.draw()
+    
 #------------------------------------------------------------------------------
 
 #组件
@@ -224,18 +272,18 @@ button2 = Button(root, text="显示原始影像", command = openData,
                  activebackground = "blue", bg = "Turquoise", fg = "white")
 button2.place(x=100,y=100)
 
-button3 = Button(root, text="逻辑回归", command = root.destroy,
+button3 = Button(root, text="逻辑回归", command = lambda:logisticRegression(X_train,y_train),
                  activeforeground = "black",
                  activebackground = "blue", bg = "Turquoise", fg = "white")
 button3.place(x=100,y=150)
 
-button4 = Button(root, text="决策边界", command = root.destroy,
+button4 = Button(root, text="决策边界", command = lambda:plotDecisionBoundary(result_theta,X_train,y_train),
                  activeforeground = "black",
                  activebackground = "blue", bg = "Turquoise", fg = "white")
 button4.place(x=100,y=200)
 
 
-button4 = Button(root, text="预测并显示结果", command = lambda:logisticRegression(),
+button4 = Button(root, text="预测并显示结果", command = lambda:predict_image(image_array,result_theta),
                  activeforeground = "black",
                  activebackground = "blue", bg = "Turquoise", fg = "white")
 button4.place(x=100,y=250)
