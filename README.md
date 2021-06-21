@@ -5,15 +5,15 @@
 
 这里实现的是地表参数植被覆盖度的线性回归，并且实现了对影像的植被覆盖度预测，主要内容如下图：
 
-<img src="C:\Users\gw\AppData\Roaming\Typora\typora-user-images\image-20210621193333469.png" alt="image-20210621193333469" style="zoom: 67%;" />
+<img src="E:\git workspace\my_Machine_Learning\pictures\image-线性回归01.png" alt="image-20210621193333469" style="zoom: 67%;" />
 
-<img src="C:\Users\gw\AppData\Roaming\Typora\typora-user-images\image-20210621193417162.png" alt="image-20210621193417162" style="zoom:67%;" />
+<img src="E:\git workspace\my_Machine_Learning\pictures\image-线性回归02.png" alt="image-20210621193417162" style="zoom:67%;" />
 
-<img src="C:\Users\gw\AppData\Roaming\Typora\typora-user-images\image-20210621193651145.png" alt="image-20210621193651145" style="zoom:67%;" />
+<img src="E:\git workspace\my_Machine_Learning\pictures\image-线性回归03.png" alt="image-20210621193651145" style="zoom:67%;" />
 
-<img src="C:\Users\gw\AppData\Roaming\Typora\typora-user-images\image-20210621193743618.png" alt="image-20210621193743618" style="zoom:67%;" />
+<img src="E:\git workspace\my_Machine_Learning\pictures\image-线性回归04.png" alt="image-20210621193743618" style="zoom:67%;" />
 
-<img src="C:\Users\gw\AppData\Roaming\Typora\typora-user-images\image-20210621193817287.png" alt="image-20210621193817287" style="zoom:67%;" />
+<img src="E:\git workspace\my_Machine_Learning\pictures\image-线性回归05.png" alt="image-20210621193817287" style="zoom:67%;" />
 
 ## 2.逻辑回归
 
