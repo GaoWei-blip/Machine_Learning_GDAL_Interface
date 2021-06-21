@@ -124,7 +124,7 @@ def openData():
     label_Img.place(x=450,y=100)
     
     global X_train,y_train
-    data = pd.read_csv('.data/hiwater_xiayou_practice.txt')
+    data = pd.read_csv('./data/hiwater_xiayou_practice.txt')
     data = np.array(data)
     X_train = data[:,2:8]
     y_train = data[:,9].reshape(-1,1)
