@@ -257,7 +257,7 @@ def predict_image(X,result_theta):
 
 #组件
 #1.标签
-label = Label(root, text="实现遥感地表参数反演-逻辑回归",
+label = Label(root, text="实现遥感分类-逻辑回归",
               bg="pink",bd=10,font=("Airal",12),width=28,height=1)
 label.pack(side=TOP)
 
